@@ -372,43 +372,34 @@ DELIMITER //
 
 CREATE PROCEDURE sp_LivrosESeusAutores()
 BEGIN
-    -- Declare uma variável de cursor para armazenar os resultados da consulta
+
     DECLARE done INT DEFAULT 0;
     DECLARE livro_info VARCHAR(255);
 
-    -- Crie um cursor para a consulta que busca os livros e seus autores
     DECLARE cur CURSOR FOR
         SELECT Livro.Titulo, CONCAT(Autor.Nome, ' ', Autor.Sobrenome) AS Autor
         FROM Livro
         INNER JOIN Autor_Livro ON Livro.Livro_ID = Autor_Livro.Livro_ID
         INNER JOIN Autor ON Autor_Livro.Autor_ID = Autor.Autor_ID;
     
-    -- Defina um manipulador para tratar a situação em que nenhum resultado é encontrado
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
-    -- Abra o cursor
     OPEN cur;
 
-    -- Recupere o primeiro resultado da consulta
     FETCH cur INTO livro_info;
 
-    -- Verifique se o cursor encontrou resultados
     IF done = 0 THEN
-        -- Se houver resultados, imprima o cabeçalho
+
         SELECT 'Título do Livro' AS 'Título', 'Nome do Autor' AS 'Autor';
         
-        -- Use um loop para imprimir os títulos dos livros e seus autores
         REPEAT
             SELECT livro_info AS 'Título e Autor';
-            -- Recupere o próximo resultado
             FETCH cur INTO livro_info;
         UNTIL done = 1 END REPEAT;
     ELSE
-        -- Se nenhum resultado for encontrado, imprima uma mensagem indicando isso
         SELECT 'Nenhum livro encontrado com autor registrado';
     END IF;
 
-    -- Feche o cursor
     CLOSE cur;
 END //
 
