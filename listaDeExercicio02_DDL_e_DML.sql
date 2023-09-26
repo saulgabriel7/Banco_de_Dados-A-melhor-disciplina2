@@ -338,52 +338,31 @@ DELIMITER ;
 
 /*9*/
 
+-- O DELIMITER serve para mudar o jeito que o SQL interpreta os comandos.
+-- Aqui, estamos trocando o ponto e vírgula (;) por //, que é usado para criar procedures.
+-- Isso evita confusões com os pontos e vírgulas dentro da procedure.
+
 DELIMITER //
 
--- Criar o stored procedure
-CREATE PROCEDURE sp_LivrosPorCategoria(IN categoria_nome VARCHAR(100))
+-- Criação da Procedure sp_AutorMaisAntigo
+-- Essa Produce, vai nos dar o nome completo do autor mais antigo com base na data de nascimento.
+-- O nome completo vai ser colocado em uma variável chamada autor_mais_antigo_nome.
+
+CREATE PROCEDURE sp_AutorMaisAntigo(OUT autor_mais_antigo_nome VARCHAR(255))
 BEGIN
-    -- Declarar uma variável de cursor para armazenar os resultados da consulta
-    DECLARE done INT DEFAULT 0;
-    DECLARE livro_titulo VARCHAR(255);
+    -- Agora selecionamos o nome e sobrenome do autor mais antigo.
+    -- Para fazer isso, olhamos a data de nascimento de todos os autores.
+    -- Usei uma subconsulta para encontrar a data de nascimento mais antiga de todos eles.
 
-    -- Criar um cursor para a consulta que busca os títulos dos livros na categoria especificada
-    DECLARE cur CURSOR FOR
-        SELECT Livro.Titulo
-        FROM Livro
-        INNER JOIN Categoria ON Livro.Categoria_ID = Categoria.Categoria_ID
-        WHERE Categoria.Nome = categoria_nome;
-    
-    -- Definir um manipulador para tratar a situação em que nenhum resultado é encontrado
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
-
-    -- Abrir o cursor
-    OPEN cur;
-
-    -- Recuperar o primeiro resultado da consulta
-    FETCH cur INTO livro_titulo;
-
-    -- Verificar se o cursor encontrou resultados
-    IF done = 0 THEN
-        -- Se houver resultados, imprima o cabeçalho
-        SELECT 'Títulos dos Livros na Categoria ' AS 'Categoria', categoria_nome AS 'Nome da Categoria';
-        SELECT 'Título do Livro' AS 'Título';
-        
-        -- Loop para imprimir os títulos dos livros
-        REPEAT
-            SELECT livro_titulo AS 'Título';
-            -- Recupere o próximo resultado
-            FETCH cur INTO livro_titulo;
-        UNTIL done = 1 END REPEAT;
-    ELSE
-        -- Se nenhum resultado for encontrado, imprimir isso
-        SELECT 'Nenhum livro encontrado na categoria ' AS 'Categoria', categoria_nome AS 'Nome da Categoria';
-    END IF;
-
-    -- Fechar o cursor
-    CLOSE cur;
+    SELECT CONCAT(Nome, ' ', Sobrenome) INTO autor_mais_antigo_nome
+    FROM Autor
+    WHERE Data_Nascimento = (
+        SELECT MIN(Data_Nascimento)
+        FROM Autor
+    );
 END //
 
+-- Depois de terminar a procedure, voltamos ao jeito normal de usar ponto e vírgula (;).
 DELIMITER ;
 
 
